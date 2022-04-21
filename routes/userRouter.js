@@ -12,18 +12,12 @@ const router = Router();
 router.post("/login", validate(loginValidation, {}, {}), userController.login);
 router.post("/registration",validate(registrationValidation, {} , {}), userController.registration);
 router.patch("/update" , validate(updateValidation) , authCheck, userController.updateUser)
-
-
-// TODO: 
+// TODO: ?
 router.get("/users", userController.getAll);
-
 router.delete("/delete/:id", userController.deleteById);
-
-//TODO: find good solution
 router.get("/logout", authCheck, function (req, res, next) {
-  req.user = {};
-  res.redirect("/");
-  //res.token = ''//TODO hueta
+  req.user = undefined
+  return res.redirect("/login")
 });
 
 module.exports = router;

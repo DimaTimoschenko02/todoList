@@ -2,18 +2,19 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/UserSchema");
 const todo = require("../models/todoSchema");
+const ApiError = require('../errors/ApiError')
 
+//TODO: replace but where?
 const generateJwt = (id, name, age, email) => {
   return jwt.sign(
     { id, name, age, email },
-    //TODO: process.env
-    "LOLO-LOP",
+    process.env.SECRET,
     { expiresIn: "24h" }
   );
 };
 
 class userController {
-  async login(req, res) {
+  async login(req, res , next) {
     const { email, password } = req.body;
     try {
       const isExist = await User.findOne({ email });
@@ -25,25 +26,23 @@ class userController {
             isExist.age,
             isExist.email
           );
-          //req._user = isExist
           return res.json({ user: isExist, token });
         }
       } else {
-        //TODO:
-        return res.json({ message: "no user with this name" });
+        return next(ApiError.badRequest('incorrect input'));
       }
-    } catch (e) {
-      console.log(e);
-      //TODO:
+    } catch (err) {
+      throw err
     }
   }
 
-  async registration(req, res) {
+  async registration(req, res , next) {
     const { name, password, email, age } = req.body;
     try {
-      const isExist = User.findOne(email);
+      const isExist = await User.findOne({email});
       if (isExist) {
-        //TODO:
+        //console.log({isExist})
+        return next(ApiError.badRequest('this email already exist'))
       }
       const hashPass = await bcrypt.hash(password, 5);
       const newUser = new User({
@@ -54,23 +53,19 @@ class userController {
         todos: { items: [] },
       });
       await newUser.save();
-      return res.json(isExist);
+      return res.json(newUser);
     } catch (e) {
       console.log(e);
     }
   }
 
-  async updateUser(req, res) {
+  async updateUser(req, res , next) {
     const { name, age, password, newPassword } = req.body;
     console.log(req.body);
     const email = req.user.email;
     try {
-      const user = await User.findOne({ email });
-      if (!user) {
-        //TODO: handle the error
-      }
       if (!bcrypt.compareSync(user.password, newPassword)) {
-        // TODO: error
+        return next(ApiError.badRequest('uncorrect password'))
       }
       const hashPass = await bcrypt.hash(newPassword, 5);
       req.body.password = hashPass;
@@ -79,16 +74,16 @@ class userController {
       });
       res.json({ updatedUser });
     } catch (e) {
-      console.log(e);
-      //TODO: handle the error
+      console.log(err);
+      throw err
     }
   }
-
+  // TODO: only for admin
   async getAll(req, res) {
-    const users = await User.find();
+    const users = await User.find()
     return res.json({ users });
   }
-
+  // TODO: only for admin
   async deleteById(req, res) {
     const { id } = req.params;
     const items = (await User.findById(id)).todos.items;

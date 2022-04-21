@@ -1,21 +1,29 @@
+const ApiError = require("../errors/ApiError");
 const TODO = require("../models/TodoSchema");
 const User = require("../models/UserSchema");
 
-async function updateTodos(id, todoId) {
+//TODO: replace these functions. where should i replace it?? 
+async function addTodoToUser(id, todoId) {
   const t = await User.findOne({ id });
   let todosCopy = Object.assign({}, t.todos);
   todosCopy.items.push({ todoId });
   await User.findByIdAndUpdate(id, { todos: todosCopy });
 }
-//TODO: replace func
+async function removeTodoFromUser(id, todoId) {
+  const t = await User.findOne({ id });
+  let todosCopy = Object.assign({}, t.todos);
+  const newItems = todosCopy.items.filter(item => item.todoId !== todoId)
+  await User.findByIdAndUpdate(id, { todos: newItems });
+}
+//TODO: replace these functions. where should i replace it?? 
 class todoController {
-
 
   async get(req, res) {
     const task = await TODO.find({ userId: req.user.id });
     return res.json({ task });
   }
 
+  //TODO: only for admin
   async getAll(req, res) {
     const tasks = await TODO.find();
     return res.json({ tasks });
@@ -33,26 +41,28 @@ class todoController {
       await task.save();
 
     
-      await updateTodos(req.user.id, task.id);
+      await addTodoToUser(req.user.id, task.id);
       //
 
       return res.json({ task });
       
-    } catch (e) {
-      console.log(e);
+    } catch (err) {
+      throw err
     }
   }
 
-  async deleteById(req, res) {
-      //TODO: delete from user arr
+  async deleteById(req, res , next) {
+    const { id } = req.params;
+    const isExist = await TODO.findByIdAndRemove(id)
+    if(!isExist){
+      return next(ApiError.badRequest('no todo with this ID'))
+    }
     try {
-      const { id } = req.params;
-      console.log(req.params);
+      removeTodoFromUser(req.user.id , id)
       await TODO.findByIdAndRemove(id);
       return res.json({ mes: "delete successfully" });
-    } catch (e) {
-      console.log(e);
-      // TODO: error
+    } catch (err) {
+      throw err
     }
   }
 }
