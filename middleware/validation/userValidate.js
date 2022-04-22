@@ -8,6 +8,8 @@ const password = Joi.string()
   .required();
 const email = Joi.string().email().exist().required();
 const age = Joi.number().min(12);
+const role = Joi.string()
+
 
 const loginValidation = {
   body: Joi.object({
@@ -22,6 +24,7 @@ const registrationValidation = {
     password,
     email,
     age,
+    role
   }),
 };
 

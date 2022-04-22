@@ -18,6 +18,11 @@ const User = new Schema({
         unique:true,
         type: String
     },
+    role:{
+        required:true,
+        default: 'USER',
+        type: String
+    },
     todos:{
         items:[
             {

@@ -1,21 +1,7 @@
 const ApiError = require("../errors/ApiError");
 const TODO = require("../models/TodoSchema");
-const User = require("../models/UserSchema");
+const {addTodoToUser , removeTodoFromUser } = require('../models/User/manageItems')
 
-//TODO: replace these functions. where should i replace it?? 
-async function addTodoToUser(id, todoId) {
-  const t = await User.findOne({ id });
-  let todosCopy = Object.assign({}, t.todos);
-  todosCopy.items.push({ todoId });
-  await User.findByIdAndUpdate(id, { todos: todosCopy });
-}
-async function removeTodoFromUser(id, todoId) {
-  const t = await User.findOne({ id });
-  let todosCopy = Object.assign({}, t.todos);
-  const newItems = todosCopy.items.filter(item => item.todoId !== todoId)
-  await User.findByIdAndUpdate(id, { todos: newItems });
-}
-//TODO: replace these functions. where should i replace it?? 
 class todoController {
 
   async get(req, res) {
@@ -39,8 +25,6 @@ class todoController {
         userId: id,
       });
       await task.save();
-
-    
       await addTodoToUser(req.user.id, task.id);
       //
 
