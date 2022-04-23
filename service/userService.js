@@ -4,7 +4,6 @@ const bcrypt = require("bcrypt");
 const generateJwt = require("../middleware/generateJwt");
 const Todo = require("../models/TodoSchema");
 
-
 async function loginUser(email, password) {
   try {
     const isExist = await User.findOne({ email });
@@ -51,10 +50,10 @@ async function registrationUser(body) {
 //TODO: add token
 async function updateUser(body, email) {
   const { name, age, password, newPassword } = body;
-  const user = await User.findOne({email})
+  const user = await User.findOne({ email });
   try {
     if (!bcrypt.compareSync(password, user.password)) {
-      return (ApiError.badRequest("uncorrect password"));
+      return ApiError.badRequest("uncorrect password");
     }
     const hashPass = await bcrypt.hash(newPassword, 5);
     const updatedUser = await User.findOneAndUpdate(
@@ -62,7 +61,7 @@ async function updateUser(body, email) {
       { ...body, password: hashPass },
       { new: true }
     );
-    await updatedUser.save()
+    await updatedUser.save();
     return { updatedUser };
   } catch (err) {
     throw err;
@@ -81,4 +80,15 @@ async function deleteUserById(id) {
   return { message: "deleted successfully" };
 }
 
-module.exports = { loginUser, registrationUser, updateUser, deleteUserById };
+async function getAllUsers() {
+  const users = await User.find();
+  return { users };
+}
+
+module.exports = {
+  loginUser,
+  registrationUser,
+  updateUser,
+  deleteUserById,
+  getAllUsers,
+};
